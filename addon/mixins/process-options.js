@@ -1,6 +1,6 @@
 import Mixin from '@ember/object/mixin';
-import { computed, get, getProperties } from '@ember/object';
-import { assign } from '@ember/polyfills';
+import { computed, get, getProperties, set } from '@ember/object';
+import { deprecate } from '@ember/application/deprecations';
 
 function addObservers(obj, keys, callback) {
   keys.forEach((key) => obj.addObserver(key, callback));
@@ -72,15 +72,26 @@ export default Mixin.create({
     let _requiredOptions = get(this, '_requiredOptions');
     let required = getProperties(this, _requiredOptions);
 
-    return assign(required, options);
+    return Object.assign({}, required, options);
   }),
 
   init() {
     this._super(...arguments);
 
+    deprecate(
+      `
+The \`ProcessOptions\` mixin will be removed in the next major version of ember-google-maps. \
+If you need to manually parse component attributes, use the functions provided in \`ember-google-maps/utils/options-and-events\`.`,
+      false,
+      { id: 'process-options-mixin-removed', until: '4.0' }
+    );
+
     if (!this._eventAttrs) {
       this._eventAttrs = [];
     }
+
+    this._isInitialized = false;
+    this.isInitialized.promise.then(() => set(this, '_isInitialized', true));
   },
 
   willDestroyElement() {

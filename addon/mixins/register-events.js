@@ -2,7 +2,7 @@ import Mixin from '@ember/object/mixin';
 import { computed, get, getProperties } from '@ember/object';
 import { reads } from '@ember/object/computed';
 import { decamelize } from '@ember/string';
-import { assign } from '@ember/polyfills';
+import { deprecate } from '@ember/application/deprecations';
 
 /**
  * Register Google Maps events on any map component.
@@ -60,7 +60,7 @@ export default Mixin.create({
     let events = get(this, 'events');
     let extractedEvents = getProperties(this, get(this, '_eventAttrs'));
 
-    return assign({}, events, extractedEvents);
+    return Object.assign({}, events, extractedEvents);
   }),
 
   /**
@@ -74,6 +74,18 @@ export default Mixin.create({
    */
   _filterEventsByName(attr) {
     return attr.slice(0, 2) === 'on' && get(this, '_ignoredAttrs').indexOf(attr) === -1;
+  },
+
+  init() {
+    this._super(...arguments);
+
+    deprecate(
+      `
+The \`RegisterEvents\` mixin will be removed in the next major version of ember-google-maps. \
+You can extract events from the component attributes and add event listeners using the functions in \`ember-google-maps/utils/options-and-events\`.`,
+      false,
+      { id: 'register-events-mixin-removed', until: '4.0' }
+    );
   },
 
   willDestroyElement() {
